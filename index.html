@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>単語帳 学習アプリ</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <header>
+            <h1>📚 単語帳 学習アプリ (776〜875)</h1>
+            <div class="mode-selector direction-selector">
+                <button id="dir-en-jp" class="mode-btn active" onclick="app.setDirection('en_to_jp')">英 → 日</button>
+                <button id="dir-jp-en" class="mode-btn" onclick="app.setDirection('jp_to_en')">日 → 英</button>
+            </div>
+            
+            <div class="mode-selector">
+                <button id="mode-list" class="mode-btn active" onclick="app.setMode('list')">📖 問題一覧 (暗記)</button>
+                <button id="mode-quiz" class="mode-btn" onclick="app.setMode('quiz')">📝 一問一答 (テスト)</button>
+            </div>
+            <div class="category-selector">
+                <select id="category-select" onchange="app.selectCategory(this.value)">
+                </select>
+            </div>
+        </header>
+
+        <main id="main-content">
+            </main>
+    </div>
+    
+    <script src="data.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
