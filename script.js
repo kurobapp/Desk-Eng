@@ -12,6 +12,7 @@ var app = {
     allEnglishWords: [], 
     allJapaneseAnswers: [], 
     allWords: [], 
+    currentKeydownHandler: null, // ★追加: キーイベントの参照を保持
 
     cleanText: function(text) {
         if (!text) return '';
@@ -32,6 +33,17 @@ var app = {
         
         this.setDirection('en_to_jp'); 
         this.setMode('list'); 
+        
+        // ★追加: ページが閉じられる前にキーイベントリスナーを削除する
+        window.addEventListener('beforeunload', this.cleanup.bind(this));
+    },
+
+    // ★追加: クリーンアップ関数
+    cleanup: function() {
+        if (this.currentKeydownHandler) {
+            document.removeEventListener('keydown', this.currentKeydownHandler);
+            this.currentKeydownHandler = null;
+        }
     },
 
     setDirection: function(dir) {
@@ -122,6 +134,12 @@ var app = {
         container.innerHTML = '';
         window.scrollTo(0,0);
         
+        // ★追加: render時に既存のキーイベントリスナーを削除
+        if (this.currentKeydownHandler) {
+            document.removeEventListener('keydown', this.currentKeydownHandler);
+            this.currentKeydownHandler = null;
+        }
+
         if (this.filteredQuestions.length === 0) {
             container.innerHTML = '<p style="text-align:center;">このカテゴリに問題はありません。</p>';
             return;
@@ -252,9 +270,31 @@ var app = {
             };
 
             submitBtn.onclick = submitHandler;
-            input.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') submitHandler();
-            });
+            
+            // ★修正・追加: キーイベントをkeydownに変更し、回答時と次へ進む時（Enter/Space）を処理
+            const keydownHandler = (e) => {
+                const isEnterOrSpace = (e.key === 'Enter' || e.key === ' '); // スペースキーも追加
+                
+                if (isEnterOrSpace) {
+                    e.preventDefault(); // デフォルトの動作（フォーム送信、スクロール）を防止
+                    
+                    // 1. 回答前: 回答を送信
+                    if (!input.disabled) {
+                        submitHandler();
+                    } 
+                    // 2. 回答後: 次の問題へ進む
+                    else {
+                        const nextBtn = document.getElementById('btn-next');
+                        if (nextBtn && !nextBtn.disabled) {
+                            this.nextQuiz();
+                        }
+                    }
+                }
+            };
+
+            // ページ全体のキー入力を監視
+            document.addEventListener('keydown', keydownHandler);
+            this.currentKeydownHandler = keydownHandler; // 参照を保持
             
             setTimeout(() => input.focus(), 100);
         }
@@ -341,6 +381,12 @@ var app = {
         const container = document.getElementById('main-content');
         if (!container) return; 
         
+        // ★追加: render時に既存のキーイベントリスナーを削除
+        if (this.currentKeydownHandler) {
+            document.removeEventListener('keydown', this.currentKeydownHandler);
+            this.currentKeydownHandler = null;
+        }
+
         const total = this.filteredQuestions.length;
         const uniqueWrongIds = new Set(this.wrongQuestions.map(q => q.id));
         const wrongCount = uniqueWrongIds.size;
